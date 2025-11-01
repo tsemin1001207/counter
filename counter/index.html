@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>園遊會計數器</title>
-  <link rel="stylesheet" href="style.css">
+  <title>園遊會飲品計數器</title>
   <style>
     body {
       font-family: "Microsoft JhengHei", sans-serif;
-      background-color: #f9fafb;
+      background-color: #f8fafc;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -21,17 +20,23 @@
     h1 {
       margin-bottom: 30px;
       color: #333;
+      text-align: center;
     }
 
     .counter {
-      background: white;
+      background-color: #ffffff;
       width: 90%;
       max-width: 400px;
       padding: 20px;
       margin-bottom: 20px;
-      border-radius: 16px;
+      border-radius: 20px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       text-align: center;
+      transition: transform 0.15s ease;
+    }
+
+    .counter:hover {
+      transform: translateY(-2px);
     }
 
     h2 {
@@ -53,50 +58,66 @@
       cursor: pointer;
       background-color: #007aff;
       color: white;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.1s;
     }
 
     button:hover {
       background-color: #005ec2;
+      transform: scale(1.05);
     }
 
     .reset-btn {
       background-color: #f43f5e;
+      font-size: 20px;
+      padding: 12px 24px;
+      border-radius: 16px;
+      margin-top: 20px;
     }
 
     .reset-btn:hover {
       background-color: #b91c1c;
     }
+
+    .total {
+      font-size: 24px;
+      font-weight: bold;
+      color: #16a34a;
+      margin-top: 20px;
+      background: #ffffff;
+      padding: 12px 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
   </style>
 </head>
-<link rel="stylesheet" href="style.css">
 <body>
-  <h1>🎡 園遊會計數器</h1>
+  <h1>🍹 園遊會飲品計數器</h1>
 
   <div class="counter">
-    <h2>套圈圈：<span id="套圈圈">0</span></h2>
-    <button onclick="changeCount('套圈圈', 1)">＋1</button>
-    <button onclick="changeCount('套圈圈', -1)">－1</button>
+    <h2>嚕貓的午後（50元） <span id="嚕貓的午後">0</span></h2>
+    <button onclick="changeCount('嚕貓的午後', 1)">＋1</button>
+    <button onclick="changeCount('嚕貓的午後', -1)">－1</button>
   </div>
 
   <div class="counter">
-    <h2>丟棒球：<span id="丟棒球">0</span></h2>
-    <button onclick="changeCount('丟棒球', 1)">＋1</button>
-    <button onclick="changeCount('丟棒球', -1)">－1</button>
+    <h2>初戀的滋味（40元） <span id="初戀的滋味">0</span></h2>
+    <button onclick="changeCount('初戀的滋味', 1)">＋1</button>
+    <button onclick="changeCount('初戀的滋味', -1)">－1</button>
   </div>
 
   <div class="counter">
-    <h2>飲料A：<span id="飲料A">0</span></h2>
-    <button onclick="changeCount('飲料A', 1)">＋1</button>
-    <button onclick="changeCount('飲料A', -1)">－1</button>
+    <h2>心花朵朵開（30元） <span id="心花朵朵開">0</span></h2>
+    <button onclick="changeCount('心花朵朵開', 1)">＋1</button>
+    <button onclick="changeCount('心花朵朵開', -1)">－1</button>
   </div>
 
   <div class="counter">
-    <h2>飲料B：<span id="飲料B">0</span></h2>
-    <button onclick="changeCount('飲料B', 1)">＋1</button>
-    <button onclick="changeCount('飲料B', -1)">－1</button>
+    <h2>丟中你的心（30元） <span id="丟中你的心">0</span></h2>
+    <button onclick="changeCount('丟中你的心', 1)">＋1</button>
+    <button onclick="changeCount('丟中你的心', -1)">－1</button>
   </div>
 
+  <div class="total">總金額：<span id="total">0</span> 元</div>
   <button class="reset-btn" onclick="resetAll()">全部歸零</button>
 
   <script type="module">
@@ -115,16 +136,26 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const items = ["套圈圈", "丟棒球", "飲料A", "飲料B"];
 
-    items.forEach(item => {
+    // 產品與價格設定
+    const products = {
+      "嚕貓的午後": 50,
+      "初戀的滋味": 40,
+      "心花朵朵開": 30,
+      "丟中你的心": 30
+    };
+
+    // 初始化監聽
+    Object.keys(products).forEach(item => {
       const itemRef = ref(db, `counters/${item}`);
       onValue(itemRef, (snapshot) => {
         const val = snapshot.val() ?? 0;
         document.getElementById(item).innerText = val;
+        updateTotal();
       });
     });
 
+    // 加減數量
     window.changeCount = function(item, delta) {
       const itemRef = ref(db, `counters/${item}`);
       get(itemRef).then(snapshot => {
@@ -135,11 +166,22 @@
       });
     }
 
+    // 全部歸零
     window.resetAll = function() {
       const updates = {};
-      items.forEach(item => updates[`counters/${item}`] = 0);
+      Object.keys(products).forEach(item => updates[`counters/${item}`] = 0);
       update(ref(db), updates);
     };
+
+    // 更新總金額
+    function updateTotal() {
+      let total = 0;
+      Object.keys(products).forEach(item => {
+        const count = parseInt(document.getElementById(item).innerText) || 0;
+        total += count * products[item];
+      });
+      document.getElementById("total").innerText = total;
+    }
   </script>
 </body>
 </html>
