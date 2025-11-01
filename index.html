@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>總售出計數器</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background-color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding-top: 40px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+      text-align: center;
+    }
+
+    .counter {
+      background-color: #ffffff;
+      width: 90%;
+      max-width: 400px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.15s ease;
+    }
+
+    .counter:hover {
+      transform: translateY(-2px);
+    }
+
+    h2 {
+      margin-bottom: 15px;
+      font-size: 22px;
+    }
+
+    span {
+      font-weight: bold;
+      color: #007aff;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 18px;
+      margin: 5px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background-color: #007aff;
+      color: white;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background-color: #005ec2;
+      transform: scale(1.05);
+    }
+
+    .reset-btn {
+      background-color: #f43f5e;
+      font-size: 20px;
+      padding: 12px 24px;
+      border-radius: 16px;
+      margin-top: 20px;
+    }
+
+    .reset-btn:hover {
+      background-color: #b91c1c;
+    }
+
+    .total {
+      font-size: 24px;
+      font-weight: bold;
+      color: #16a34a;
+      margin-top: 20px;
+      background: #ffffff;
+      padding: 12px 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>總售出計數器</h1>
+
+  <div class="counter">
+    <h2>嚕貓的午後（50元） <span id="嚕貓的午後">0</span></h2>
+    <button onclick="changeCount('嚕貓的午後', 1)">＋1</button>
+    <button onclick="changeCount('嚕貓的午後', -1)">－1</button>
+  </div>
+
+  <div class="counter">
+    <h2>初戀的滋味（40元） <span id="初戀的滋味">0</span></h2>
+    <button onclick="changeCount('初戀的滋味', 1)">＋1</button>
+    <button onclick="changeCount('初戀的滋味', -1)">－1</button>
+  </div>
+
+  <div class="counter">
+    <h2>心花朵朵開（30元） <span id="心花朵朵開">0</span></h2>
+    <button onclick="changeCount('心花朵朵開', 1)">＋1</button>
+    <button onclick="changeCount('心花朵朵開', -1)">－1</button>
+  </div>
+
+  <div class="counter">
+    <h2>丟中你的心（30元） <span id="丟中你的心">0</span></h2>
+    <button onclick="changeCount('丟中你的心', 1)">＋1</button>
+    <button onclick="changeCount('丟中你的心', -1)">－1</button>
+  </div>
+
+  <div class="total">總金額：<span id="total">0</span> 元</div>
+  <button class="reset-btn" onclick="resetAll()">全部歸零</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6Lm6Flx878p6GReuF8u3AX2xBypYKd2k",
+      authDomain: "counter-7df4e.firebaseapp.com",
+      databaseURL: "https://counter-7df4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "counter-7df4e",
+      storageBucket: "counter-7df4e.firebasestorage.app",
+      messagingSenderId: "175857896264",
+      appId: "1:175857896264:web:4993068673eccb9b74017d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 產品與價格設定
+    const products = {
+      "嚕貓的午後": 50,
+      "初戀的滋味": 40,
+      "心花朵朵開": 30,
+      "丟中你的心": 30
+    };
+
+    // 初始化監聽
+    Object.keys(products).forEach(item => {
+      const itemRef = ref(db, `counters/${item}`);
+      onValue(itemRef, (snapshot) => {
+        const val = snapshot.val() ?? 0;
+        document.getElementById(item).innerText = val;
+        updateTotal();
+      });
+    });
+
+    // 加減數量
+    window.changeCount = function(item, delta) {
+      const itemRef = ref(db, `counters/${item}`);
+      get(itemRef).then(snapshot => {
+        let count = snapshot.val() ?? 0;
+        count += delta;
+        if (count < 0) count = 0;
+        set(itemRef, count);
+      });
+    }
+
+    // 全部歸零
+    window.resetAll = function() {
+      const updates = {};
+      Object.keys(products).forEach(item => updates[`counters/${item}`] = 0);
+      update(ref(db), updates);
+    };
+
+    // 更新總金額
+    function updateTotal() {
+      let total = 0;
+      Object.keys(products).forEach(item => {
+        const count = parseInt(document.getElementById(item).innerText) || 0;
+        total += count * products[item];
+      });
+      document.getElementById("total").innerText = total;
+    }
+  </script>
+</body>
+</html>
