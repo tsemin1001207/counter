@@ -43,12 +43,21 @@
       font-size: 16px;
       border: none;
       border-radius: 8px;
-      background-color: #007bff;
       color: white;
       cursor: pointer;
+      margin: 5px;
     }
-    button:hover {
+    .plus {
+      background-color: #007bff;
+    }
+    .plus:hover {
       background-color: #0056b3;
+    }
+    .minus {
+      background-color: #dc3545;
+    }
+    .minus:hover {
+      background-color: #a71d2a;
     }
   </style>
 </head>
@@ -58,27 +67,30 @@
     <div class="item">
       <h2>套圈圈</h2>
       <div class="count" id="count1">0</div>
-      <button onclick="addCount('count1')">+1</button>
+      <button class="plus" onclick="addCount('count1')">+1</button>
+      <button class="minus" onclick="subtractCount('count1')">-1</button>
     </div>
     <div class="item">
       <h2>丟棒球</h2>
       <div class="count" id="count2">0</div>
-      <button onclick="addCount('count2')">+1</button>
+      <button class="plus" onclick="addCount('count2')">+1</button>
+      <button class="minus" onclick="subtractCount('count2')">-1</button>
     </div>
     <div class="item">
       <h2>飲料A</h2>
       <div class="count" id="count3">0</div>
-      <button onclick="addCount('count3')">+1</button>
+      <button class="plus" onclick="addCount('count3')">+1</button>
+      <button class="minus" onclick="subtractCount('count3')">-1</button>
     </div>
     <div class="item">
       <h2>飲料B</h2>
       <div class="count" id="count4">0</div>
-      <button onclick="addCount('count4')">+1</button>
+      <button class="plus" onclick="addCount('count4')">+1</button>
+      <button class="minus" onclick="subtractCount('count4')">-1</button>
     </div>
   </div>
 
   <script>
-    // 初始化時讀取儲存的數據
     const counts = ["count1", "count2", "count3", "count4"];
     counts.forEach(id => {
       const saved = localStorage.getItem(id);
@@ -86,9 +98,18 @@
     });
 
     function addCount(id) {
+      updateCount(id, 1);
+    }
+
+    function subtractCount(id) {
+      updateCount(id, -1);
+    }
+
+    function updateCount(id, change) {
       const el = document.getElementById(id);
       let num = parseInt(el.textContent);
-      num++;
+      num += change;
+      if (num < 0) num = 0; // 防止變成負數
       el.textContent = num;
       localStorage.setItem(id, num);
     }
