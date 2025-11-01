@@ -4,115 +4,142 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>園遊會計數器</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: "Microsoft JhengHei", sans-serif;
-      background-color: white;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      margin-top: 30px;
-      font-size: 28px;
-    }
-    .counter {
+      background-color: #f9fafb;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 30px;
-      gap: 20px;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding-top: 40px;
     }
-    .item {
-      border: 2px solid #444;
-      border-radius: 12px;
+
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .counter {
+      background: white;
+      width: 90%;
+      max-width: 400px;
       padding: 20px;
-      width: 200px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
     }
-    .item h2 {
-      margin: 0 0 10px;
-      font-size: 20px;
+
+    h2 {
+      margin-bottom: 15px;
+      font-size: 22px;
     }
-    .count {
-      font-size: 24px;
-      margin-bottom: 10px;
+
+    span {
+      font-weight: bold;
+      color: #007aff;
     }
+
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
+      font-size: 18px;
+      padding: 10px 18px;
       margin: 5px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background-color: #007aff;
+      color: white;
+      transition: background-color 0.2s;
     }
-    .plus {
-      background-color: #007bff;
+
+    button:hover {
+      background-color: #005ec2;
     }
-    .plus:hover {
-      background-color: #0056b3;
+
+    .reset-btn {
+      background-color: #f43f5e;
     }
-    .minus {
-      background-color: #dc3545;
-    }
-    .minus:hover {
-      background-color: #a71d2a;
+
+    .reset-btn:hover {
+      background-color: #b91c1c;
     }
   </style>
 </head>
+<link rel="stylesheet" href="style.css">
 <body>
-  <h1>🎪 園遊會計數器 🎯</h1>
+  <h1>🎡 園遊會計數器</h1>
+
   <div class="counter">
-    <div class="item">
-      <h2>套圈圈</h2>
-      <div class="count" id="count1">0</div>
-      <button class="plus" onclick="addCount('count1')">+1</button>
-      <button class="minus" onclick="subtractCount('count1')">-1</button>
-    </div>
-    <div class="item">
-      <h2>丟棒球</h2>
-      <div class="count" id="count2">0</div>
-      <button class="plus" onclick="addCount('count2')">+1</button>
-      <button class="minus" onclick="subtractCount('count2')">-1</button>
-    </div>
-    <div class="item">
-      <h2>飲料A</h2>
-      <div class="count" id="count3">0</div>
-      <button class="plus" onclick="addCount('count3')">+1</button>
-      <button class="minus" onclick="subtractCount('count3')">-1</button>
-    </div>
-    <div class="item">
-      <h2>飲料B</h2>
-      <div class="count" id="count4">0</div>
-      <button class="plus" onclick="addCount('count4')">+1</button>
-      <button class="minus" onclick="subtractCount('count4')">-1</button>
-    </div>
+    <h2>套圈圈：<span id="套圈圈">0</span></h2>
+    <button onclick="changeCount('套圈圈', 1)">＋1</button>
+    <button onclick="changeCount('套圈圈', -1)">－1</button>
   </div>
 
-  <script>
-    const counts = ["count1", "count2", "count3", "count4"];
-    counts.forEach(id => {
-      const saved = localStorage.getItem(id);
-      if (saved) document.getElementById(id).textContent = saved;
+  <div class="counter">
+    <h2>丟棒球：<span id="丟棒球">0</span></h2>
+    <button onclick="changeCount('丟棒球', 1)">＋1</button>
+    <button onclick="changeCount('丟棒球', -1)">－1</button>
+  </div>
+
+  <div class="counter">
+    <h2>飲料A：<span id="飲料A">0</span></h2>
+    <button onclick="changeCount('飲料A', 1)">＋1</button>
+    <button onclick="changeCount('飲料A', -1)">－1</button>
+  </div>
+
+  <div class="counter">
+    <h2>飲料B：<span id="飲料B">0</span></h2>
+    <button onclick="changeCount('飲料B', 1)">＋1</button>
+    <button onclick="changeCount('飲料B', -1)">－1</button>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">全部歸零</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6Lm6Flx878p6GReuF8u3AX2xBypYKd2k",
+      authDomain: "counter-7df4e.firebaseapp.com",
+      databaseURL: "https://counter-7df4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "counter-7df4e",
+      storageBucket: "counter-7df4e.firebasestorage.app",
+      messagingSenderId: "175857896264",
+      appId: "1:175857896264:web:4993068673eccb9b74017d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const items = ["套圈圈", "丟棒球", "飲料A", "飲料B"];
+
+    items.forEach(item => {
+      const itemRef = ref(db, `counters/${item}`);
+      onValue(itemRef, (snapshot) => {
+        const val = snapshot.val() ?? 0;
+        document.getElementById(item).innerText = val;
+      });
     });
 
-    function addCount(id) {
-      updateCount(id, 1);
+    window.changeCount = function(item, delta) {
+      const itemRef = ref(db, `counters/${item}`);
+      get(itemRef).then(snapshot => {
+        let count = snapshot.val() ?? 0;
+        count += delta;
+        if (count < 0) count = 0;
+        set(itemRef, count);
+      });
     }
 
-    function subtractCount(id) {
-      updateCount(id, -1);
-    }
-
-    function updateCount(id, change) {
-      const el = document.getElementById(id);
-      let num = parseInt(el.textContent);
-      num += change;
-      if (num < 0) num = 0; // 防止變成負數
-      el.textContent = num;
-      localStorage.setItem(id, num);
-    }
+    window.resetAll = function() {
+      const updates = {};
+      items.forEach(item => updates[`counters/${item}`] = 0);
+      update(ref(db), updates);
+    };
   </script>
 </body>
 </html>
